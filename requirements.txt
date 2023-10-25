@@ -45,3 +45,4 @@ jupyterlab-server==2.14.0
 pexpect==4.8.0
 phonenumbers==8.13.22
 requests==2.21.0
+streamlit==1.27.2
