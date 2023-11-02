@@ -42,6 +42,8 @@ jupyter-server==1.17.0
 jupyterlab==3.4.2
 jupyterlab-pygments==0.2.2
 jupyterlab-server==2.14.0
+matplotlib==3.8.1
+openpyxl==3.1.2
 pexpect==4.8.0
 phonenumbers==8.13.22
 requests==2.21.0
