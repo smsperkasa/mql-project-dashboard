@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.8
+FROM python:3.9.10
 
 # Set the working directory in the container
 WORKDIR /project_dashboard
@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /project_dashboard/
 
 # Run the Streamlit app when the container launches
-CMD ["streamlit", "run", "--server.no_browser", "project_dashboard.py"]
+CMD ["streamlit", "run", "project_dashboard.py"]

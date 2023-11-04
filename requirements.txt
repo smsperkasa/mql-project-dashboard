@@ -17,5 +17,4 @@ jupyterlab-server==2.14.0
 matplotlib==3.8.1
 openpyxl==3.1.2
 phonenumbers==8.13.22
-requests==2.21.0
 streamlit==1.27.2
