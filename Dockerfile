@@ -1,6 +1,8 @@
 # Use an official Python runtime as a parent image
 FROM python:3.9.10
 
+RUN apt-get update && apt-get -y install cron
+
 # Set the working directory in the container
 WORKDIR /project_dashboard
 
@@ -23,4 +25,4 @@ RUN chmod 0644 /etc/cron.d/cronjob
 RUN touch /var/log/cron.log
 
 # Run the command on container startup
-CMD ["sh", "-c", "crond && streamlit run project_dashboard.py"]
+CMD ["sh", "-c", "cron && streamlit run project_dashboard.py"]
