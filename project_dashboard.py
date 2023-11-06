@@ -243,6 +243,7 @@ daily_mql = extend_dataframe(daily_mql, ['mql', 'agg_mql', 'daily_target', 'agg_
 daily_mql['daily_target'] = mql_daily_target
 daily_mql['agg_daily_target'] = daily_mql['daily_target'].cumsum()
 
+daily_mql['date'] = pd.to_datetime(daily_mql['date'], errors='coerce').dt.date
 daily_mql = daily_mql.sort_values(by='date')
 
 daily_mql_q3 = non_duplicated_mql_q3.add(filtered_duplicated_mql_q3, fill_value=0)
