@@ -13,5 +13,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY . /project_dashboard/
 
+# Copy the cron file to the cron.d directory
+COPY cronjob /etc/cron.d/cronjob
+
+# Give execution rights to the cron job
+RUN chmod 0644 /etc/cron.d/cronjob
+
+# Create a log file for cron
+RUN touch /var/log/cron.log
+
 # Run the Streamlit app when the container launches
 CMD ["streamlit", "run", "project_dashboard.py"]

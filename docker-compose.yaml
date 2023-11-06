@@ -2,5 +2,7 @@ version: '3'
 services:
   streamlit-app:
     build: .
+    volumes:
+      - ./data:/project_dashboard/data
     ports:
       - "8501:8501"
