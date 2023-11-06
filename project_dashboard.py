@@ -403,7 +403,7 @@ daily_conversion_rate_report.rename(columns={
 
 st.title("Data")
 st.write("MQL")
-st.write(daily_mql_report[~daily_mql_report.mql.isna()])
+st.write(daily_mql_report[~daily_mql_report.Q4.isna()])
 
 st.write("Engagement Rate")
 st.write(daily_engagement_rate_report[~daily_engagement_rate_report.Q4.isna()])
