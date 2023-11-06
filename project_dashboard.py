@@ -379,7 +379,7 @@ st.write("MQL")
 st.write(daily_mql_report[~daily_mql_report.mql.isna()])
 
 st.write("Engagement Rate")
-st.write(daily_conversion_rate_report[~daily_conversion_rate_report.Q4.isna()])
+st.write(daily_engagement_rate_report[~daily_engagement_rate_report.Q4.isna()])
 
 st.write("Conversion Rate")
 st.write(daily_conversion_rate_report[~daily_conversion_rate_report.Q4.isna()])
