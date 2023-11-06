@@ -1,2 +1,2 @@
 # Schedule your Streamlit app to run at UTC 1am, 5am, 10am every day
-0 1,5,10 * * * root /usr/local/bin/python run /project_dashboard/project_data.py >> /var/log/cron.log 2>&1
+30 * * * * root /usr/local/bin/python /project_dashboard/project_data.py >> /var/log/cron.log 2>&1

@@ -337,6 +337,6 @@ daily_conversion_rate['conversion_rate_qtd'] = ((daily_conversion_rate.conversio
 daily_engagement_rate['daily_percentage'] = ((daily_engagement_rate.engagement_rate - daily_engagement_rate.initial) / (daily_engagement_rate.target - daily_engagement_rate.initial)) * 100
 daily_conversion_rate['daily_percentage'] = ((daily_conversion_rate.conversion_rate - daily_conversion_rate.initial) / (daily_conversion_rate.target - daily_conversion_rate.initial)) * 100
 
-daily_mql.to_csv('./data/daily_mql.csv', index=False)
-daily_engagement_rate.to_csv('./data/daily_engagement_rate.csv', index=False)
-daily_conversion_rate.to_csv('./data/daily_conversion_rate.csv', index=False)
+daily_mql.to_csv('/project_dashboard/data/daily_mql.csv', index=False)
+daily_engagement_rate.to_csv('/project_dashboard/data/daily_engagement_rate.csv', index=False)
+daily_conversion_rate.to_csv('/project_dashboard/data/daily_conversion_rate.csv', index=False)
