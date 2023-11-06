@@ -22,5 +22,5 @@ RUN chmod 0644 /etc/cron.d/cronjob
 # Create a log file for cron
 RUN touch /var/log/cron.log
 
-# Run the Streamlit app when the container launches
-CMD ["streamlit", "run", "project_dashboard.py"]
+# Run the command on container startup
+CMD ["sh", "-c", "crond && streamlit run project_dashboard.py"]
