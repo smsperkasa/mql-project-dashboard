@@ -252,8 +252,8 @@ daily_mql_q3['agg_mql'] = daily_mql_q3['mql'].cumsum()
 agg_mql_q3 = daily_mql_q3.agg_mql.values.tolist()
 
 daily_mql['agg_mql_q3'] = agg_mql_q3
-daily_mql['agg_mql_qtd'] = ((daily_mql.agg_mql - daily_mql.agg_mql_q3) / daily_mql.agg_mql_q3) * 100
-daily_mql = daily_mql[['date', 'mql', 'agg_mql', 'agg_mql_q3', 'agg_mql_qtd', 'daily_target', 'agg_daily_target', 'daily_percentage', 'mql_target_total', 'achivement_percentage']]
+daily_mql['agg_mql_qtd_percentage'] = ((daily_mql.agg_mql - daily_mql.agg_mql_q3) / daily_mql.agg_mql_q3) * 100
+daily_mql = daily_mql[['date', 'mql', 'agg_mql', 'agg_mql_q3', 'agg_mql_qtd_percentage', 'daily_target', 'agg_daily_target', 'daily_percentage', 'mql_target_total', 'achivement_percentage']]
 
 conn = psycopg2.connect(
     host="178.128.83.235",
@@ -331,8 +331,8 @@ daily_conversion_rate['conversion_rate_q3'] = daily_conversion_rate_q3.conversio
 daily_engagement_rate['engagement_rate_q3'] = daily_engagement_rate['engagement_rate_q3'] * 100
 daily_conversion_rate['conversion_rate_q3'] = daily_conversion_rate['conversion_rate_q3'] * 100
 
-daily_engagement_rate['engagement_rate_qtd'] = ((daily_engagement_rate.engagement_rate - daily_engagement_rate.engagement_rate_q3) / daily_engagement_rate.engagement_rate_q3) * 100
-daily_conversion_rate['conversion_rate_qtd'] = ((daily_conversion_rate.conversion_rate - daily_conversion_rate.conversion_rate_q3) / daily_conversion_rate.conversion_rate_q3) * 100
+daily_engagement_rate['engagement_rate_qtd_percentage'] = ((daily_engagement_rate.engagement_rate - daily_engagement_rate.engagement_rate_q3) / daily_engagement_rate.engagement_rate_q3) * 100
+daily_conversion_rate['conversion_rate_qtd_percentage'] = ((daily_conversion_rate.conversion_rate - daily_conversion_rate.conversion_rate_q3) / daily_conversion_rate.conversion_rate_q3) * 100
 
 daily_engagement_rate['daily_percentage'] = ((daily_engagement_rate.engagement_rate - daily_engagement_rate.initial) / (daily_engagement_rate.target - daily_engagement_rate.initial)) * 100
 daily_conversion_rate['daily_percentage'] = ((daily_conversion_rate.conversion_rate - daily_conversion_rate.initial) / (daily_conversion_rate.target - daily_conversion_rate.initial)) * 100

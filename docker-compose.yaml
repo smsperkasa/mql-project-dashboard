@@ -2,8 +2,20 @@ version: '3'
 services:
   streamlit-app:
     build: .
+    container_name: streamlit-app
     volumes:
       - ./data:/project_dashboard/data
       - ./logs:/var/log
+    expose:
+      - 8501
+  
+  nginx:
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+    container_name: streamlit-app-nginx
+    volumes:
+      - ./nginx/openssl:/etc/letsencrypt/live
+    restart: always
     ports:
-      - "8501:8501"
+      - "443:443"
