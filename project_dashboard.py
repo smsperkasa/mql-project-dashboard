@@ -379,6 +379,28 @@ st.line_chart(
    daily_conversion_rate_report, x="date", y=["Q3", "Q4", "initial", "target"], color=["#00FF00", "#0000FF", "#FFCE30", "#FF0000"]  # Optional
 )
 
+# Rearrange report column
+daily_mql_report = daily_mql_report[['date', 'Q3', 'Q4', 'agg_mql_qtd_percentage', 'target', 'daily_percentage', 'achivement_percentage']]
+daily_mql_report.rename(columns={
+    'agg_mql_qtd_percentage': 'QTD percentage',
+    'daily_percentage': 'Daily target percentage',
+    'achivement_percentage': 'Overall percentage'
+}, inplace=True)
+
+daily_engagement_rate_report = daily_engagement_rate_report[['date', 'Q3', 'Q4', 'engagement_rate_qtd_percentage', 'target', 'daily_percentage']]
+daily_engagement_rate_report.rename(columns={
+    'engagement_rate_qtd_percentage': 'QTD percentage',
+    'daily_percentage': 'Daily target percentage',
+    'achivement_percentage': 'Overall percentage'
+}, inplace=True)
+
+daily_conversion_rate_report = daily_conversion_rate_report[['date', 'Q3', 'Q4', 'conversion_rate_qtd_percentage', 'target', 'daily_percentage']]
+daily_conversion_rate_report.rename(columns={
+    'conversion_rate_qtd_percentage': 'QTD percentage',
+    'daily_percentage': 'Daily target percentage',
+    'achivement_percentage': 'Overall percentage'
+}, inplace=True)
+
 st.title("Data")
 st.write("MQL")
 st.write(daily_mql_report[~daily_mql_report.mql.isna()])
