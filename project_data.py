@@ -5,6 +5,8 @@ import phonenumbers
 import psycopg2
 import xmlrpc.client
 
+from ast import literal_eval
+
 ODOO_URL = "https://smsperkasa.odoo.com"
 ODOO_DB = "smsperkasa-master-1574977"
 ODOO_USERNAME = "admin"
@@ -37,6 +39,17 @@ def search_from_odoo(model, payload, fields, order=''):
         return result
     except Exception as err:
         return ["Error", err]
+
+def convert_list_str(strList, idx):
+    if strList is not None:
+        return strList[idx]
+    return None
+
+def custom_sort(row):
+    if pd.isnull(row['source']):
+        return row['create_date']  # If B is None, prioritize create_date
+    else:
+        return row['create_date'] - datetime.timedelta(weeks=3580)  # If B has a value, prioritize a date in the past
 
 def convert_phonenumber(phonenumber):
     """Function to convert phone number to the right format"""
@@ -167,7 +180,7 @@ odoo_leads = search_from_odoo(
     [
         "&", "|", ["active", "=", True], ["active", "=", False], ["type", "=", "lead"]
     ],
-    ['id', 'name', 'email_from', 'phone', 'create_date', 'type']
+    ['id', 'name', 'email_from', 'phone', 'create_date', 'type', 'source_id', 'medium_id', 'campaign_id']
 )
 raw_odoo_leads_df = pd.DataFrame.from_dict(odoo_leads)
 odoo_leads_df = raw_odoo_leads_df
@@ -178,15 +191,20 @@ odoo_leads_df = odoo_leads_df.replace('', None)
 odoo_leads_df = odoo_leads_df.replace(False, None)
 odoo_leads_df['create_date'] = pd.to_datetime(odoo_leads_df['create_date'], errors='coerce')
 odoo_leads_df['cleaned_phone'] = odoo_leads_df.apply(lambda x: convert_phonenumber(x.phone), axis=1)
+odoo_leads_df['source'] = odoo_leads_df.apply(lambda x: convert_list_str(x.source_id, 1), axis=1)
+odoo_leads_df['medium'] = odoo_leads_df.apply(lambda x: convert_list_str(x.medium_id, 1), axis=1)
+odoo_leads_df['campaign'] = odoo_leads_df.apply(lambda x: convert_list_str(x.campaign_id, 1), axis=1)
 
 selected_cw_df = cw_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date']]
 selected_odoo_contacts_df = sorted_contacts_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date']]
-selected_odoo_leads_df = odoo_leads_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date']]
+selected_odoo_leads_df = odoo_leads_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date', 'source', 'medium', 'campaign']]
+selected_odoo_leads_df['source'] = selected_odoo_leads_df['source'].fillna(value='direct')
 
 joined_contacts = pd.concat([selected_cw_df, selected_odoo_contacts_df, selected_odoo_leads_df])
 joined_contacts = joined_contacts[(~joined_contacts.cleaned_email.isna()) | (~joined_contacts.cleaned_phone.isna())]
 joined_contacts['cleaned_email'] = joined_contacts['cleaned_email'].str.lower()
-joined_contacts = joined_contacts.sort_values(by='create_date', ascending=False)
+joined_contacts = joined_contacts.assign(sort_key=joined_contacts.apply(custom_sort, axis=1))
+joined_contacts = joined_contacts.sort_values(by='sort_key', ascending=False)
 joined_contacts = joined_contacts.drop_duplicates(subset=['cleaned_email', 'cleaned_phone'], keep='last')
 
 df = joined_contacts
@@ -207,6 +225,9 @@ for index, row in df.iterrows():
 duplicated_df = df[~df.group_label.isna()]
 non_duplicated_df = df[df.group_label.isna()]
 filtered_duplicated_df = duplicated_df.drop_duplicates(subset='group_label', keep='last')
+
+filtered_duplicated_df['source'] = filtered_duplicated_df['source'].fillna(value='None')
+non_duplicated_df['source'] = non_duplicated_df['source'].fillna(value='None')
 
 date_range_2023 = filtered_duplicated_df[(filtered_duplicated_df['create_date'] >= '2023-10-01') & (filtered_duplicated_df['create_date'] <= '2023-12-31')]
 filtered_duplicated_mql_2023 = date_range_2023.groupby([date_range_2023['create_date'].dt.date.rename('date')]).agg({'count'})['create_date']
@@ -254,6 +275,17 @@ agg_mql_q3 = daily_mql_q3.agg_mql.values.tolist()
 daily_mql['agg_mql_q3'] = agg_mql_q3
 daily_mql['agg_mql_qtd_percentage'] = ((daily_mql.agg_mql - daily_mql.agg_mql_q3) / daily_mql.agg_mql_q3) * 100
 daily_mql = daily_mql[['date', 'mql', 'agg_mql', 'agg_mql_q3', 'agg_mql_qtd_percentage', 'daily_target', 'agg_daily_target', 'daily_percentage', 'mql_target_total', 'achivement_percentage']]
+
+date_range_2023 = filtered_duplicated_df[(filtered_duplicated_df['create_date'] >= '2023-10-01') & (filtered_duplicated_df['create_date'] <= '2023-12-31')]
+source_filtered_duplicated_mql_2023 = date_range_2023.groupby([date_range_2023['create_date'].dt.date.rename('date'), date_range_2023['source']]).agg({'count'})['create_date']
+date_range_2023 = non_duplicated_df[(non_duplicated_df['create_date'] >= '2023-10-01') & (non_duplicated_df['create_date'] <= '2023-12-31')]
+source_non_duplicated_mql_2023 = date_range_2023.groupby([date_range_2023['create_date'].dt.date.rename('date'), date_range_2023['source']]).agg({'count'})['create_date']
+
+source_daily_mql = source_non_duplicated_mql_2023.add(source_filtered_duplicated_mql_2023, fill_value=0)
+source_daily_mql = source_daily_mql.reset_index()
+source_daily_mql.rename(columns={
+    'count': 'mql'
+}, inplace=True)
 
 conn = psycopg2.connect(
     host="178.128.83.235",
@@ -340,3 +372,4 @@ daily_conversion_rate['daily_percentage'] = ((daily_conversion_rate.conversion_r
 daily_mql.to_csv('/project_dashboard/data/daily_mql.csv', index=False)
 daily_engagement_rate.to_csv('/project_dashboard/data/daily_engagement_rate.csv', index=False)
 daily_conversion_rate.to_csv('/project_dashboard/data/daily_conversion_rate.csv', index=False)
+source_daily_mql.to_csv('/project_dashboard/data/source_daily_mql.csv', index=False)

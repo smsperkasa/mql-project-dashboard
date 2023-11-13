@@ -346,6 +346,7 @@ st. set_page_config(layout="wide")
 daily_mql = pd.read_csv('data/daily_mql.csv')
 daily_engagement_rate = pd.read_csv('data/daily_engagement_rate.csv')
 daily_conversion_rate = pd.read_csv('data/daily_conversion_rate.csv')
+source_daily_mql = pd.read_csv('data/source_daily_mql.csv')
 
 daily_mql_report = daily_mql.copy()
 daily_mql_report.rename(columns={
@@ -379,6 +380,14 @@ c = (line + line2 + line3).interactive().properties(width=600)
 
 e = alt.layer(bar, c).resolve_scale(y='independent')
 st.altair_chart(e.interactive(), theme="streamlit", use_container_width=True)
+
+mql_source = alt.Chart(source_daily_mql).mark_bar().encode(
+    x=alt.X("date:N"),
+    xOffset="source:N",
+    y=alt.Y("mql:Q"),
+    color=alt.Color("source:N"),
+).interactive()
+st.altair_chart(mql_source.interactive(), theme="streamlit", use_container_width=True)
 
 # st.line_chart(
 #    daily_mql_report, x="date", y=["Q3", "Q4", "target"], color=["#00FF00", "#0000FF", "#FF0000"]  # Optional
