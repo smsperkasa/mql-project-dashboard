@@ -1,4 +1,5 @@
 """This is a Python script in combination with streamlit to generate project dashboard"""
+import altair as alt
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
@@ -340,6 +341,8 @@ import xmlrpc.client
 # daily_engagement_rate['daily_percentage'] = ((daily_engagement_rate.engagement_rate - daily_engagement_rate.initial) / (daily_engagement_rate.target - daily_engagement_rate.initial)) * 100
 # daily_conversion_rate['daily_percentage'] = ((daily_conversion_rate.conversion_rate - daily_conversion_rate.initial) / (daily_conversion_rate.target - daily_conversion_rate.initial)) * 100
 
+st. set_page_config(layout="wide")
+
 daily_mql = pd.read_csv('data/daily_mql.csv')
 daily_engagement_rate = pd.read_csv('data/daily_engagement_rate.csv')
 daily_conversion_rate = pd.read_csv('data/daily_conversion_rate.csv')
@@ -365,9 +368,21 @@ daily_conversion_rate_report.rename(columns={
 
 st.title("Project Chart")
 st.write("MQL Achievement")
-st.line_chart(
-   daily_mql_report, x="date", y=["Q3", "Q4", "target"], color=["#00FF00", "#0000FF", "#FF0000"]  # Optional
-)
+base = alt.Chart(daily_mql_report).encode(x=alt.X('date:T', axis=alt.Axis(labelAngle=325)))
+line =  base.mark_line(color='red').encode(y=alt.Y('target:Q')).interactive()
+line2 =  base.mark_line(color='green').encode(y=alt.Y('Q3:Q')).interactive()
+line3 =  base.mark_line(color='blue').encode(y=alt.Y('Q4:Q')).interactive()
+
+bar = base.mark_bar().encode(y=alt.Y('mql', scale=alt.Scale(domain=[1, 500])))
+
+c = (line + line2 + line3).interactive().properties(width=600)
+
+e = alt.layer(bar, c).resolve_scale(y='independent')
+st.altair_chart(e.interactive(), theme="streamlit", use_container_width=True)
+
+# st.line_chart(
+#    daily_mql_report, x="date", y=["Q3", "Q4", "target"], color=["#00FF00", "#0000FF", "#FF0000"]  # Optional
+# )
 
 st.write("Engagement Rate Achievement")
 st.line_chart(
