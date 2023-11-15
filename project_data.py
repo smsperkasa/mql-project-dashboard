@@ -222,6 +222,8 @@ for index, row in df.iterrows():
         label = found_dup.reset_index().at[0, 'id']
         duplicated_label('cleaned_phone', row, 1, label)
 
+df.to_csv('/project_dashboard/data/all_round_data.csv', index=False)
+
 duplicated_df = df[~df.group_label.isna()]
 non_duplicated_df = df[df.group_label.isna()]
 filtered_duplicated_df = duplicated_df.drop_duplicates(subset='group_label', keep='last')
