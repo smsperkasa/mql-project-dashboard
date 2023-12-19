@@ -233,7 +233,7 @@ for index, row in df.iterrows():
         label = found_dup.reset_index().at[0, 'id']
         duplicated_label('cleaned_phone', row, 1, label)
 
-df.to_csv('data/all_round_data.csv', index=False)
+df.to_csv('/project_dashboard/data/all_round_data.csv', index=False)
 
 duplicated_df = df[~df.group_label.isna()]
 non_duplicated_df = df[df.group_label.isna()]
@@ -393,14 +393,14 @@ daily_conversion_rate['conversion_rate_qtd_percentage'] = ((daily_conversion_rat
 daily_engagement_rate['daily_percentage'] = ((daily_engagement_rate.engagement_rate - daily_engagement_rate.initial) / (daily_engagement_rate.target - daily_engagement_rate.initial)) * 100
 daily_conversion_rate['daily_percentage'] = ((daily_conversion_rate.conversion_rate - daily_conversion_rate.initial) / (daily_conversion_rate.target - daily_conversion_rate.initial)) * 100
 
-# daily_mql.to_csv('/project_dashboard/data/daily_mql.csv', index=False)
-# daily_engagement_rate.to_csv('/project_dashboard/data/daily_engagement_rate.csv', index=False)
-# daily_conversion_rate.to_csv('/project_dashboard/data/daily_conversion_rate.csv', index=False)
-# source_daily_mql.to_csv('/project_dashboard/data/source_daily_mql.csv', index=False)
-# source_conv_daily_mql.to_csv('/project_dashboard/data/source_conv_daily_mql.csv', index=False)
+daily_mql.to_csv('/project_dashboard/data/daily_mql.csv', index=False)
+daily_engagement_rate.to_csv('/project_dashboard/data/daily_engagement_rate.csv', index=False)
+daily_conversion_rate.to_csv('/project_dashboard/data/daily_conversion_rate.csv', index=False)
+source_daily_mql.to_csv('/project_dashboard/data/source_daily_mql.csv', index=False)
+source_conv_daily_mql.to_csv('/project_dashboard/data/source_conv_daily_mql.csv', index=False)
 
-daily_mql.to_csv('data/daily_mql.csv', index=False)
-daily_engagement_rate.to_csv('data/daily_engagement_rate.csv', index=False)
-daily_conversion_rate.to_csv('data/daily_conversion_rate.csv', index=False)
-source_daily_mql.to_csv('data/source_daily_mql.csv', index=False)
-source_conv_daily_mql.to_csv('data/source_conv_daily_mql.csv', index=False)
+# daily_mql.to_csv('data/daily_mql.csv', index=False)
+# daily_engagement_rate.to_csv('data/daily_engagement_rate.csv', index=False)
+# daily_conversion_rate.to_csv('data/daily_conversion_rate.csv', index=False)
+# source_daily_mql.to_csv('data/source_daily_mql.csv', index=False)
+# source_conv_daily_mql.to_csv('data/source_conv_daily_mql.csv', index=False)
