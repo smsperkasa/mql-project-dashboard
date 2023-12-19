@@ -347,6 +347,7 @@ daily_mql = pd.read_csv('data/daily_mql.csv')
 daily_engagement_rate = pd.read_csv('data/daily_engagement_rate.csv')
 daily_conversion_rate = pd.read_csv('data/daily_conversion_rate.csv')
 source_daily_mql = pd.read_csv('data/source_daily_mql.csv')
+source_conv_daily_mql = pd.read_csv('data/source_conv_daily_mql.csv')
 
 daily_mql_report = daily_mql.copy()
 daily_mql_report.rename(columns={
@@ -388,6 +389,31 @@ mql_source = alt.Chart(source_daily_mql).mark_bar().encode(
     color=alt.Color("source:N"),
 ).interactive()
 st.altair_chart(mql_source.interactive(), theme="streamlit", use_container_width=True)
+
+# Conversion percentage
+source_total = source_conv_daily_mql.groupby(source_conv_daily_mql.source).sum()
+source_conv = source_conv_daily_mql[source_conv_daily_mql.lifecycle_stage != 'mql']
+conv_percentage = source_conv.copy()
+conv_percentage['mql'] = conv_percentage.apply(lambda row: row['mql'] / source_total.loc[row['source'], 'mql'] * 100, axis=1)
+
+st.title('Source Conversion')
+st.write('Google')
+col1, col2 = st.columns(2)
+display_conv_percentage = conv_percentage[(conv_percentage.source == 'google') & (conv_percentage.lifecycle_stage == 'opportunity')]
+display_text = "0%" if len(display_conv_percentage) == 0 else f"{display_conv_percentage.values[0][2]:.2f}%"
+col1.metric("Opportunity", display_text)
+display_conv_percentage = conv_percentage[(conv_percentage.source == 'google') & (conv_percentage.lifecycle_stage == 'customer')]
+display_text = "0%" if len(display_conv_percentage) == 0 else f"{display_conv_percentage.values[0][2]:.2f}%"
+col2.metric("Customer", display_text)
+
+st.write('Facebook')
+col1, col2 = st.columns(2)
+display_conv_percentage = conv_percentage[(conv_percentage.source == 'facebook') & (conv_percentage.lifecycle_stage == 'opportunity')]
+display_text = "0%" if len(display_conv_percentage) == 0 else f"{display_conv_percentage.values[0][2]:.2f}%"
+col1.metric("Opportunity", display_text)
+display_conv_percentage = conv_percentage[(conv_percentage.source == 'facebook') & (conv_percentage.lifecycle_stage == 'customer')]
+display_text = "0%" if len(display_conv_percentage) == 0 else f"{display_conv_percentage.values[0][2]:.2f}%"
+col2.metric("Customer", display_text)
 
 # st.line_chart(
 #    daily_mql_report, x="date", y=["Q3", "Q4", "target"], color=["#00FF00", "#0000FF", "#FF0000"]  # Optional

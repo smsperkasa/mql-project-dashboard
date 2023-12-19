@@ -139,7 +139,7 @@ odoo_contacts = search_from_odoo(
     [
         ['email', 'not like', 'smsperkasa'],
     ],
-    ['id', 'name', 'email', 'phone', 'mobile', 'create_date']
+    ['id', 'name', 'email', 'phone', 'mobile', 'create_date', 'lifecycle_stage']
 )
 raw_odoo_contacts_df = pd.DataFrame(odoo_contacts)
 
@@ -148,28 +148,28 @@ odoo_contacts_df = odoo_contacts_df.replace(False, None)
 odoo_contacts_df['create_date'] = pd.to_datetime(odoo_contacts_df['create_date'], errors='coerce')
 
 odoo_contacts_df[['phone1', 'phone2', 'phone3']] = odoo_contacts_df['phone'].str.split(r'[,/<>;]+', expand=True)
-odoo_contacts_df = odoo_contacts_df.melt(id_vars=['id', 'name', 'email', 'phone', 'mobile', 'create_date'], value_vars=['phone1', 'phone2', 'phone3'], value_name='cleaned_phone')
+odoo_contacts_df = odoo_contacts_df.melt(id_vars=['id', 'name', 'email', 'phone', 'mobile', 'create_date', 'lifecycle_stage'], value_vars=['phone1', 'phone2', 'phone3'], value_name='cleaned_phone')
 odoo_contacts_df = odoo_contacts_df[~(((odoo_contacts_df.cleaned_phone.isna()) | (odoo_contacts_df.cleaned_phone.str.strip() == "")) & ((odoo_contacts_df.variable == 'phone2') | (odoo_contacts_df.variable == 'phone3')))]
 odoo_contacts_df.drop(columns='variable', inplace=True)
 
 tmp_contact_copy = odoo_contacts_df
-work_phones = tmp_contact_copy[['id', 'name', 'email', 'phone', 'create_date', 'cleaned_phone']]
+work_phones = tmp_contact_copy[['id', 'name', 'email', 'phone', 'create_date', 'lifecycle_stage', 'cleaned_phone']]
 other_phones = (
     tmp_contact_copy[~tmp_contact_copy.mobile.isna()]['mobile'].str.split(',')
     .explode()
     .to_frame('cleaned_phone')
     
     # grab the correct name from the original DataFrame
-    .join(tmp_contact_copy[['id', 'name', 'email', 'phone', 'create_date']])
+    .join(tmp_contact_copy[['id', 'name', 'email', 'phone', 'create_date', 'lifecycle_stage']])
 )
 
 tmp_combined_contact = pd.concat([work_phones, other_phones]).reset_index(level=0)
 sorted_contacts_df = tmp_combined_contact.sort_values('create_date', ascending=False)
 sorted_contacts_df = sorted_contacts_df.drop_duplicates(subset=['id', 'name', 'email', 'phone', 'create_date', 'cleaned_phone'], keep='last')
-sorted_contacts_df = sorted_contacts_df[['id', 'name', 'email', 'phone', 'create_date', 'cleaned_phone']]
+sorted_contacts_df = sorted_contacts_df[['id', 'name', 'email', 'phone', 'create_date', 'lifecycle_stage', 'cleaned_phone']]
 
 sorted_contacts_df[['email1', 'email2', 'email3']] = sorted_contacts_df['email'].str.split(r'[ ,/<>]+', expand=True)
-sorted_contacts_df = sorted_contacts_df.melt(id_vars=['id', 'name', 'email', 'phone', 'create_date', 'cleaned_phone'], value_vars=['email1', 'email2', 'email3'], value_name='cleaned_email')
+sorted_contacts_df = sorted_contacts_df.melt(id_vars=['id', 'name', 'email', 'phone', 'create_date', 'lifecycle_stage', 'cleaned_phone'], value_vars=['email1', 'email2', 'email3'], value_name='cleaned_email')
 sorted_contacts_df = sorted_contacts_df[~(((sorted_contacts_df.cleaned_email.isna()) | (sorted_contacts_df.cleaned_email.str.strip() == "")) & ((sorted_contacts_df.variable == 'email2') | (sorted_contacts_df.variable == 'email3')))]
 sorted_contacts_df.drop(columns='variable', inplace=True)
 
@@ -178,9 +178,9 @@ sorted_contacts_df['cleaned_phone'] = sorted_contacts_df.apply(lambda x: convert
 odoo_leads = search_from_odoo(
     'crm.lead',
     [
-        "&", "|", ["active", "=", True], ["active", "=", False], ["type", "=", "lead"]
+        "|", ["active", "=", True], ["active", "=", False]
     ],
-    ['id', 'name', 'email_from', 'phone', 'create_date', 'type', 'source_id', 'medium_id', 'campaign_id']
+    ['id', 'name', 'email_from', 'phone', 'create_date', 'type', 'source_id', 'medium_id', 'campaign_id', 'partner_id', 'opportunity_start_date']
 )
 raw_odoo_leads_df = pd.DataFrame.from_dict(odoo_leads)
 odoo_leads_df = raw_odoo_leads_df
@@ -194,11 +194,16 @@ odoo_leads_df['cleaned_phone'] = odoo_leads_df.apply(lambda x: convert_phonenumb
 odoo_leads_df['source'] = odoo_leads_df.apply(lambda x: convert_list_str(x.source_id, 1), axis=1)
 odoo_leads_df['medium'] = odoo_leads_df.apply(lambda x: convert_list_str(x.medium_id, 1), axis=1)
 odoo_leads_df['campaign'] = odoo_leads_df.apply(lambda x: convert_list_str(x.campaign_id, 1), axis=1)
+odoo_leads_df['partner_id'] = odoo_leads_df.apply(lambda x: convert_list_str(x.partner_id, 0), axis=1)
+odoo_leads_df = pd.merge(odoo_leads_df, raw_odoo_contacts_df[['id', 'lifecycle_stage']], left_on='partner_id', right_on='id', how='left')
+odoo_leads_df.rename(columns={
+    'id_x': 'id'
+}, inplace=True)
+odoo_leads_df['source'] = odoo_leads_df[odoo_leads_df.create_date != odoo_leads_df.opportunity_start_date]['source'].fillna(value='direct')
 
 selected_cw_df = cw_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date']]
-selected_odoo_contacts_df = sorted_contacts_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date']]
-selected_odoo_leads_df = odoo_leads_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date', 'source', 'medium', 'campaign']]
-selected_odoo_leads_df['source'] = selected_odoo_leads_df['source'].fillna(value='direct')
+selected_odoo_contacts_df = sorted_contacts_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date', 'lifecycle_stage']]
+selected_odoo_leads_df = odoo_leads_df[['id', 'name', 'cleaned_email', 'cleaned_phone', 'create_date', 'source', 'medium', 'campaign', 'lifecycle_stage']]
 
 joined_contacts = pd.concat([selected_cw_df, selected_odoo_contacts_df, selected_odoo_leads_df])
 joined_contacts = joined_contacts[(~joined_contacts.cleaned_email.isna()) | (~joined_contacts.cleaned_phone.isna())]
@@ -206,6 +211,12 @@ joined_contacts['cleaned_email'] = joined_contacts['cleaned_email'].str.lower()
 joined_contacts = joined_contacts.assign(sort_key=joined_contacts.apply(custom_sort, axis=1))
 joined_contacts = joined_contacts.sort_values(by='sort_key', ascending=False)
 joined_contacts = joined_contacts.drop_duplicates(subset=['cleaned_email', 'cleaned_phone'], keep='last')
+joined_contacts['lifecycle_stage'].replace(to_replace={
+    'lead': 'mql', 
+    'visitor': 'mql',
+    'sql': 'opportunity'
+    }, inplace=True)
+joined_contacts['lifecycle_stage'] = joined_contacts['lifecycle_stage'].fillna(value='mql')
 
 df = joined_contacts
 df['group_label'] = None
@@ -222,7 +233,7 @@ for index, row in df.iterrows():
         label = found_dup.reset_index().at[0, 'id']
         duplicated_label('cleaned_phone', row, 1, label)
 
-df.to_csv('/project_dashboard/data/all_round_data.csv', index=False)
+df.to_csv('data/all_round_data.csv', index=False)
 
 duplicated_df = df[~df.group_label.isna()]
 non_duplicated_df = df[df.group_label.isna()]
@@ -286,6 +297,17 @@ source_non_duplicated_mql_2023 = date_range_2023.groupby([date_range_2023['creat
 source_daily_mql = source_non_duplicated_mql_2023.add(source_filtered_duplicated_mql_2023, fill_value=0)
 source_daily_mql = source_daily_mql.reset_index()
 source_daily_mql.rename(columns={
+    'count': 'mql'
+}, inplace=True)
+
+date_range_2023 = filtered_duplicated_df[(filtered_duplicated_df['create_date'] >= '2023-10-01') & (filtered_duplicated_df['create_date'] <= '2023-12-31')]
+source_conv_filtered_duplicated_mql_2023 = date_range_2023.groupby([date_range_2023['source'], date_range_2023['lifecycle_stage']]).agg({'count'})['create_date']
+date_range_2023 = non_duplicated_df[(non_duplicated_df['create_date'] >= '2023-10-01') & (non_duplicated_df['create_date'] <= '2023-12-31')]
+source_conv_non_duplicated_mql_2023 = date_range_2023.groupby([date_range_2023['source'], date_range_2023['lifecycle_stage']]).agg({'count'})['create_date']
+
+source_conv_daily_mql = source_conv_non_duplicated_mql_2023.add(source_conv_filtered_duplicated_mql_2023, fill_value=0)
+source_conv_daily_mql = source_conv_daily_mql.reset_index()
+source_conv_daily_mql.rename(columns={
     'count': 'mql'
 }, inplace=True)
 
@@ -371,7 +393,14 @@ daily_conversion_rate['conversion_rate_qtd_percentage'] = ((daily_conversion_rat
 daily_engagement_rate['daily_percentage'] = ((daily_engagement_rate.engagement_rate - daily_engagement_rate.initial) / (daily_engagement_rate.target - daily_engagement_rate.initial)) * 100
 daily_conversion_rate['daily_percentage'] = ((daily_conversion_rate.conversion_rate - daily_conversion_rate.initial) / (daily_conversion_rate.target - daily_conversion_rate.initial)) * 100
 
-daily_mql.to_csv('/project_dashboard/data/daily_mql.csv', index=False)
-daily_engagement_rate.to_csv('/project_dashboard/data/daily_engagement_rate.csv', index=False)
-daily_conversion_rate.to_csv('/project_dashboard/data/daily_conversion_rate.csv', index=False)
-source_daily_mql.to_csv('/project_dashboard/data/source_daily_mql.csv', index=False)
+# daily_mql.to_csv('/project_dashboard/data/daily_mql.csv', index=False)
+# daily_engagement_rate.to_csv('/project_dashboard/data/daily_engagement_rate.csv', index=False)
+# daily_conversion_rate.to_csv('/project_dashboard/data/daily_conversion_rate.csv', index=False)
+# source_daily_mql.to_csv('/project_dashboard/data/source_daily_mql.csv', index=False)
+# source_conv_daily_mql.to_csv('/project_dashboard/data/source_conv_daily_mql.csv', index=False)
+
+daily_mql.to_csv('data/daily_mql.csv', index=False)
+daily_engagement_rate.to_csv('data/daily_engagement_rate.csv', index=False)
+daily_conversion_rate.to_csv('data/daily_conversion_rate.csv', index=False)
+source_daily_mql.to_csv('data/source_daily_mql.csv', index=False)
+source_conv_daily_mql.to_csv('data/source_conv_daily_mql.csv', index=False)
