@@ -348,6 +348,7 @@ daily_engagement_rate = pd.read_csv('data/daily_engagement_rate.csv')
 daily_conversion_rate = pd.read_csv('data/daily_conversion_rate.csv')
 source_daily_mql = pd.read_csv('data/source_daily_mql.csv')
 source_conv_daily_mql = pd.read_csv('data/source_conv_daily_mql.csv')
+source_conv_daily_mql = source_conv_daily_mql.fillna('None')
 
 daily_mql_report = daily_mql.copy()
 daily_mql_report.rename(columns={
